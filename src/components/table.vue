@@ -334,7 +334,7 @@ export default {
       const options = {
         network: testnet,
         contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
-        contractName: 'stxpredict_v1',
+        contractName: thisthing.contractname,
         functionName: 'joinMarket',
         functionArgs,
         appDetails: {
@@ -407,7 +407,7 @@ export default {
       const options = {
         network: testnet,
         contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
-        contractName: 'stxpredict_v1',
+        contractName: thisthing.contractname,
         functionName: 'resolveMarket',
         functionArgs,
         appDetails: {
@@ -480,7 +480,7 @@ export default {
       const options = {
         network: testnet,
         contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
-        contractName: 'stxpredict_v1',
+        contractName: thisthing.contractname,
         functionName: 'exitMarket',
         functionArgs,
         appDetails: {
@@ -548,6 +548,7 @@ export default {
       isLoadingExit: false,
       fatype: 'nothing',
       userData: null,
+      contractname: 'stxpredict_v2',
       columns: [
         // {
         //   label: 'Market Creator',

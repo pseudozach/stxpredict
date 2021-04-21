@@ -79,7 +79,7 @@
       	</button> -->
       	
 	      	<fvl-input :value.sync="form.paypervote" 
-	      		label="Payment per vote (stx)" 
+	      		label="Payment per vote (mSTX)" 
 	      		name="paypervote" 
 	      		style="margin: 10px;"
 	      		type="number"
@@ -195,6 +195,7 @@ export default {
 	    isLoadingContract: false,
 	    userData: null,
 	    marketcount: 0,
+	    contractname: 'stxpredict_v2',
 		}
 	},
     components: {
@@ -272,7 +273,7 @@ export default {
 			const options = {
 			  network: testnet,
 			  contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
-			  contractName: 'stxpredict_v1',
+			  contractName: thisthing.contractname,
 			  functionName: 'createMarket',
 			  functionArgs,
 			  appDetails: {
@@ -335,7 +336,7 @@ export default {
 			const options = {
 			  network: testnet,
 			  contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
-			  contractName: 'stxpredict_v1',
+			  contractName: thisthing.contractname,
 			  functionName: 'createMarket',
 			  functionArgs,
 			  appDetails: {
