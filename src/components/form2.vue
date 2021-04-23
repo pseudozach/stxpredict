@@ -141,6 +141,7 @@
 	  stringUtf8CV,
 	  standardPrincipalCV,
 	  trueCV,
+	  makeStandardSTXPostCondition,
 	} from '@stacks/transactions';
 
 	import Vue from 'vue'
@@ -217,14 +218,16 @@ export default {
 	        // console.log("isUserSignedIn: ", userSession.loadUserData());
 	        this.userData = userSession.loadUserData();    		
     	}
-		db.ref("stxpredict").on("value", snapshot => {
-			let data = snapshot.val();
-			let marketcount = 0;
-			Object.keys(data).forEach(key => {
-				marketcount++;
-			});
-			console.log("number of markets: ",  marketcount);
-			this.marketcount = marketcount;
+		db.ref(this.contractname).on("value", snapshot => {
+			if(snapshot.exists()){
+				let data = snapshot.val();
+				let marketcount = 0;
+				Object.keys(data).forEach(key => {
+					marketcount++;
+				});
+				console.log("number of markets: ",  marketcount);
+				this.marketcount = marketcount;				
+			}
 		});
     },
     methods: {
@@ -287,7 +290,7 @@ export default {
 			    const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
   				console.log('View transaction in explorer:', explorerTransactionUrl);
 				thisthing.isLoading = false;
-			  	db.ref("stxpredict").push({marketId: thisthing.marketcount+1, account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, paypervote: thisthing.form.paypervote, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:"manual", yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
+			  	db.ref(thisthing.contractname).push({marketId: thisthing.marketcount+1, account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, paypervote: thisthing.form.paypervote, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:"manual", yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
 				this.$notify({
 				  title: 'Create Market',
 				  text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
@@ -350,7 +353,7 @@ export default {
 			    const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
   				console.log('View transaction in explorer:', explorerTransactionUrl);
 				thisthing.isLoading = false;
-			  	db.ref("stxpredict").push({account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, paypervote: thisthing.form.paypervote, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:"manual", yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
+			  	db.ref(thisthing.contractname).push({account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, paypervote: thisthing.form.paypervote, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:"manual", yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
 				this.$notify({
 				  title: 'Create Market',
 				  text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
@@ -363,7 +366,7 @@ export default {
 			await openContractCall(options);
     	},
       	fetchData() {
-	      db.ref("stxpredict").on("value", snapshot => {
+	      db.ref(thisthing.contractname).on("value", snapshot => {
 	        let data = snapshot.val();
 	        console.log("number of markets: ", data.length);
 	        // let messages = [];

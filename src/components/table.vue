@@ -40,7 +40,6 @@
             class="button"
             label="up"
             @click.native="setThumbsUp"
-            :fatype="fatype"
             data-id="up"
             :styled="true"
             :loading="isLoadingJoin"
@@ -49,6 +48,7 @@
             aria-label="Join Market"
             style="margin-left: 10px; background-color: red;"
             class="button"
+            @click.native="setThumbsDown"
             data-id="down"
             :styled="true"
             :loading="isLoadingJoin"
@@ -60,6 +60,7 @@
             aria-label="Resolve Market"
             style="background-color: green;"
             class="button"
+            @click.native="setThumbsUp"
             :styled="true"
             :loading="isLoadingResolve"
           ><font-awesome-icon icon="thumbs-up" /></VueLoadingButton>
@@ -67,6 +68,7 @@
             aria-label="Resolve Market"
             style="margin-left: 10px; background-color: red;"
             class="button"
+            @click.native="setThumbsDown"
             :styled="true"
             :loading="isLoadingResolve"
           ><font-awesome-icon icon="thumbs-down" /></VueLoadingButton>
@@ -147,8 +149,10 @@ Vue.use(VueMeta)
   standardPrincipalCV,
   trueCV,
   falseCV,
+  FungibleConditionCode,
+  makeStandardSTXPostCondition,
 } from '@stacks/transactions';
-
+const BigNum = require('bn.js');
 
 
 // Get a RTDB instance
@@ -255,7 +259,7 @@ export default {
       // console.log("row clicked: ", params.row)
       // console.log("column clicked: ", params.column)
       // console.log("event: ", params.event, event.target.getAttribute('data-id'), event.currentTarget.getAttribute('data-id'), event.target.dataset.id)
-      console.log("fatype: ", this.fatype)
+      // console.log("fatype: ", this.fatype)
       if(params.column.field == "join"){
         this.joinMarket(params.row);
       }
@@ -289,7 +293,7 @@ export default {
     // }
     async joinMarket(marketobj){
       let thisthing = this
-      console.log("joinMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.testnet);
+      // console.log("joinMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.testnet);
       // let unixtime = new Date(this.datetime).getTime()/1000;
       // console.log("unixtime ", unixtime);
       // validate
@@ -330,7 +334,15 @@ export default {
         // stringUtf8CV('hey-utf8'),
         // trueCV(),
       ];
-      console.log("functionArgs: ", JSON.stringify(functionArgs));
+      // Add an optional post condition
+      // See below for details on constructing post conditions
+      const postConditionAddress = 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ';
+      const postConditionCode = FungibleConditionCode.LessEqual;
+      const postConditionAmount = new BigNum(parseInt(marketobj.paypervote)*2);
+      const postConditions = [
+        makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
+      ];
+      console.log("join functionArgs: ", JSON.stringify(functionArgs));
       const options = {
         network: testnet,
         contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
@@ -341,20 +353,22 @@ export default {
           name: 'stxpredict',
           icon: window.location.origin + './assets/icon.png',
         },
+        postConditions,
         onFinish: data => {
           console.log('Stacks Transaction:', data.stacksTransaction);
           console.log('Transaction ID:', data.txId);
-          console.log('Raw transaction:', data.txRaw);
+          // console.log('Raw transaction:', data.txRaw);
           const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
           console.log('View transaction in explorer:', explorerTransactionUrl);
         thisthing.isLoadingJoin = false;
         var updateobj = {yescount: newyescount, nocount: newnocount, balance: parseInt(marketobj.balance+marketobj.paypervote)};
         console.log("market, updateobj: ",marketobj.merchant, updateobj);
-          db.ref("stxpredict/"+marketobj.merchant).update(updateobj);
+          db.ref(thisthing.contractname+"/"+marketobj.merchant).update(updateobj);
         this.$notify({
           title: 'Joining Market',
           text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
           type: 'success',
+          duration: 10000,
         });
         // this.$emit('exit', true);
         },
@@ -417,17 +431,18 @@ export default {
         onFinish: data => {
           console.log('Stacks Transaction:', data.stacksTransaction);
           console.log('Transaction ID:', data.txId);
-          console.log('Raw transaction:', data.txRaw);
-          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+          // console.log('Raw transaction:', data.txRaw);
+          // const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
           console.log('View transaction in explorer:', explorerTransactionUrl);
         thisthing.isLoadingResolve = false;
         var updateobj = {result: newresult, resolved: true};
         console.log("market, updateobj: ",marketobj.merchant, updateobj);
-          db.ref("stxpredict/"+marketobj.merchant).update(updateobj);
+          db.ref(thisthing.contractname+"/"+marketobj.merchant).update(updateobj);
         this.$notify({
           title: 'Resolving Market',
           text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
           type: 'success',
+          duration: 10000,
         });
         // this.$emit('exit', true);
         },
@@ -501,6 +516,7 @@ export default {
           title: 'Exiting Market',
           text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
           type: 'success',
+          duration: 10000,
         });
         // this.$emit('exit', true);
         },
@@ -508,23 +524,26 @@ export default {
       await openContractCall(options);
       },
     fetchData() {
-      db.ref("stxpredict").on("value", snapshot => {
-        let data = snapshot.val();
-        let messages = [];
-        Object.keys(data).forEach(key => {
-          // console.log("each data[key]: ", data[key]);
-          var msgtopush = {merchant: key, ...data[key]};
-          // console.log("msgtopush: ", msgtopush);
-          messages.push(msgtopush);
-          // messages.push({
-          //   merchant: key,
-          //   lolli: data[key].lolli,
-          //   fold: data[key].fold,
-          //   strike: data[key].strike,
-          //   updatedAt: ''
-          // });
-        });
-        this.rows = messages;
+      db.ref(this.contractname).on("value", snapshot => {
+        if(snapshot.exists()){
+          let data = snapshot.val();
+          let messages = [];
+          Object.keys(data).forEach(key => {
+            // console.log("each data[key]: ", data[key]);
+            var msgtopush = {merchant: key, ...data[key]};
+            // console.log("msgtopush: ", msgtopush);
+            messages.push(msgtopush);
+            // messages.push({
+            //   merchant: key,
+            //   lolli: data[key].lolli,
+            //   fold: data[key].fold,
+            //   strike: data[key].strike,
+            //   updatedAt: ''
+            // });
+          });
+          this.rows = messages;          
+        }
+
         // this.tableitems = messages;
         // this.tableitems = [{ merchant:"Amazon", lolli:0.01, fold: 0.01, createdAt: ''}];
         // this.mytableitems = [{ merchant:"Amazon", lolli:0.01, fold: 0.01, createdAt: ''}];
