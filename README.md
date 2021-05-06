@@ -3,7 +3,7 @@
 
 Stxpredict is a proof of concept contract + web app that lets anyone create a prediction and set conditions to resolve it.
 
-Preview at: 
+Preview at: https://stxpredict.vercel.app
 Currently running on testnet.
 
 ### Build and Run:

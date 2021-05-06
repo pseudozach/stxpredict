@@ -72,6 +72,14 @@
             :styled="true"
             :loading="isLoadingResolve"
           ><font-awesome-icon icon="thumbs-down" /></VueLoadingButton>
+          <VueLoadingButton
+            aria-label="Resolve Market"
+            style="margin-left: 10px; background-color: gray;"
+            class="button"
+            @click.native="setQuestion"
+            :styled="true"
+            :loading="isLoadingResolve"
+          ><font-awesome-icon icon="question" /></VueLoadingButton>
         </span>
         <span v-else-if="props.column.field == 'exit'">
           <!-- style="font-weight: bold; color: blue;" -->
@@ -113,12 +121,14 @@ import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faThumbsUp } from '@fortawesome/free-solid-svg-icons'
 import { faThumbsDown } from '@fortawesome/free-solid-svg-icons'
+import { faQuestion } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faPlus)
 library.add(faCheck)
 library.add(faTimes)
 library.add(faThumbsUp)
 library.add(faThumbsDown)
+library.add(faQuestion)
 
 import Vue from 'vue'
 import VueMeta from 'vue-meta'
@@ -255,6 +265,10 @@ export default {
       // console.log("setThumbsUp");
       this.fatype = "down";
     },
+    setQuestion(){
+      // console.log("setThumbsUp");
+      this.fatype = "question";
+    },
     onCellClick(params) {
       // console.log("row clicked: ", params.row)
       // console.log("column clicked: ", params.column)
@@ -263,10 +277,17 @@ export default {
       if(params.column.field == "join"){
         this.joinMarket(params.row);
       }
-      if(params.column == "resolve"){
-        this.resolveMarket(params.row);
+      if(params.column.field == "resolve"){
+        if(this.fatype == "question") {
+          console.log("auto resolve");
+          this.requestResolveMarket(params.row);
+        } else {
+          console.log("manual resolve");
+          this.resolveMarket(params.row);
+        }
+        
       }
-      if(params.column == "exit"){
+      if(params.column.field == "exit"){
         this.exitMarket(params.row);
       }
       // params.row - row object 
@@ -449,6 +470,87 @@ export default {
       };
       await openContractCall(options);
       },
+    async requestResolveMarket(marketobj){
+      let thisthing = this
+      console.log("resolveMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.testnet);
+      // let unixtime = new Date(this.datetime).getTime()/1000;
+      // console.log("unixtime ", unixtime);
+      // validate
+      if(marketobj.question == "" || marketobj.paypervote == "" || marketobj.oracle.trim() == "" || this.fatype == "nothing"){
+        // using options
+      this.$notify({
+        title: 'Empty Fields',
+        text: 'Failed to fetch market data, refresh and try again.',
+        type: 'error',
+        duration: 10000,
+      });
+      return;
+      }
+      // thisthing.statustext = "Creating Market...";
+      thisthing.isLoadingResolve = true;
+        
+      // (resolveMarket (marketId int) (result bool))
+      let sideobj = trueCV();
+      let newresult = false;
+      if(thisthing.fatype == "down"){
+        sideobj = falseCV();
+        newresult = false;
+      } else {
+        newresult = true;
+      }
+      const functionArgs = [
+        intCV(parseInt(marketobj.marketId)),
+        // sideobj,
+        // stringAsciiCV(thisthing.form.question),
+        // uintCV(parseInt(marketobj.paypervote)),
+        // standardPrincipalCV(thisthing.form.oracle.trim()),
+        // uintCV(parseInt(unixtime)),
+        // stringAsciiCV("manual"),
+        // uintCV(1234),
+        // intCV(-234),
+        // bufferCV(Buffer.from('hello, world')),
+        // stringUtf8CV('hey-utf8'),
+        // trueCV(),
+      ];
+      console.log("requestResolution functionArgs: ", JSON.stringify(functionArgs));
+      var caddress = marketobj.oracle;
+      var cname = thisthing.contractname;
+      if(marketobj.oracle.includes(".")){
+        caddress = marketobj.oracle.split(".")[0];
+        cname = marketobj.oracle.split(".")[1];
+      }
+      console.log("caddress, cname: ", caddress, cname);
+      const options = {
+        network: testnet,
+        contractAddress: caddress,
+        contractName: cname,
+        functionName: 'requestResolution',
+        functionArgs,
+        appDetails: {
+          name: 'stxpredict',
+          icon: window.location.origin + './assets/icon.png',
+        },
+        onFinish: data => {
+          console.log('Stacks Transaction:', data.stacksTransaction);
+          console.log('Transaction ID:', data.txId);
+          // console.log('Raw transaction:', data.txRaw);
+          // const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+          console.log('View transaction in explorer:', explorerTransactionUrl);
+        thisthing.isLoadingResolve = false;
+        var updateobj = {result: newresult, resolved: true};
+        console.log("market, updateobj: ",marketobj.merchant, updateobj);
+          db.ref(thisthing.contractname+"/"+marketobj.merchant).update(updateobj);
+        this.$notify({
+          title: 'Resolving Market',
+          text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
+          type: 'success',
+          duration: 10000,
+        });
+        // this.$emit('exit', true);
+        },
+      };
+      await openContractCall(options);
+      },
     async exitMarket(marketobj){
       let thisthing = this
       console.log("exitMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.testnet);
@@ -567,7 +669,7 @@ export default {
       isLoadingExit: false,
       fatype: 'nothing',
       userData: null,
-      contractname: 'stxpredict_v2',
+      contractname: 'stxpredict_v3',
       columns: [
         // {
         //   label: 'Market Creator',

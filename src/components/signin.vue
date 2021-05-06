@@ -1,12 +1,12 @@
 <template>
     <div style="display: inline; margin-right: 5px;" v-if="userData == null">
         <VueLoadingButton 
-            aria-label="Sign in"
+            aria-label="Connect"
             class="button"
             @click.native="authenticate"
             :loading="isLoading"
             :styled="true"
-        >Sign in
+        >Connect
         </VueLoadingButton>
     </div>
 </template>

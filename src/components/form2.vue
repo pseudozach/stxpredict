@@ -24,7 +24,7 @@
 			  name="oracle"
 			  placeholder="--- Available Automatic Oracles ---"
 			  :allowEmpty="true"
-			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ': 'BTC / USD', 'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX': 'STX / USD'}"
+			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v2_btcusd': 'BTC / USD', 'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v2_stxusd': 'STX / USD'}"
 			  :selected.sync="form.oracle"
 			  style="margin: 10px;"
 			/>
@@ -196,7 +196,7 @@ export default {
 	    isLoadingContract: false,
 	    userData: null,
 	    marketcount: 0,
-	    contractname: 'stxpredict_v2',
+	    contractname: 'stxpredict_v3',
 		}
 	},
     components: {
