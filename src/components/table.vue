@@ -549,7 +549,7 @@ export default {
           console.log('Stacks Transaction:', data.stacksTransaction);
           console.log('Transaction ID:', data.txId);
           // console.log('Raw transaction:', data.txRaw);
-          // const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
           console.log('View transaction in explorer:', explorerTransactionUrl);
         thisthing.isLoadingResolve = false;
         var updateobj = {result: newresult, resolved: true};
