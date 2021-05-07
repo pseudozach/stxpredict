@@ -11,6 +11,7 @@
 				style="margin: 10px;" 
 				placeholder="e.g. BTC/USD price will be over $60k"
 				required
+				v-model="key"
 				type="text"
 			/>
 		  <!-- Textarea component -->
@@ -26,6 +27,7 @@
 			  :allowEmpty="true"
 			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v2_btcusd': 'BTC / USD', 'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v2_stxusd': 'STX / USD'}"
 			  :selected.sync="form.oracle"
+			  @change.native="onChange"
 			  style="margin: 10px;"
 			/>
 			<fvl-input 
@@ -35,6 +37,17 @@
 				placeholder="e.g. ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
 				style="margin: 10px;"
 			/>
+
+			<fvl-input 
+				:value.sync="form.threshold" 
+				label="Threshold (* Required for Auto Resolution)" 
+				name="threshold" 
+				style="margin: 10px;" 
+				placeholder="60000"
+				v-show="thresholdVisible"
+				type="number"
+			/>
+
 			<!-- Gujarat / ceylon / hunan / Iowa -->
 
 			<VueCtkDateTimePicker 
@@ -175,28 +188,32 @@
 export default {
 	name: 'my-component',
 	data() {
-	return {
-	    form: {
-	    	question: '',
-	        paypervote: '',
-	        // cropregion: '',
-	        // autooracle: '',
-	        // manualoracle: '',
-	        oracle: '',
-	        // resolveTime: '',
-	        // datetime: '',
-	    	},
-	    datetime: null,
-	    mindatetime: null,
-	    txid: '',
-	    pop: '',
-	    statustext: '',
-	    stuff: '',
-	    isLoading: false,
-	    isLoadingContract: false,
-	    userData: null,
-	    marketcount: 0,
-	    contractname: 'stxpredict_v3',
+		return {
+		    form: {
+		    	question: '',
+		        paypervote: '',
+		        // cropregion: '',
+		        // autooracle: '',
+		        // manualoracle: '',
+		        oracle: '',
+		        threshold: '0',
+		        // resolveTime: '',
+		        // datetime: '',
+		    	},
+		    datetime: null,
+		    mindatetime: null,
+		    txid: '',
+		    pop: '',
+		    statustext: '',
+		    stuff: '',
+		    isLoading: false,
+		    isLoadingContract: false,
+		    userData: null,
+		    marketcount: 0,
+		    contractname: 'stxpredict_v4',
+		    thresholdVisible: false,
+		    key: '',
+		    resolvetype: 'manual',
 		}
 	},
     components: {
@@ -231,6 +248,17 @@ export default {
 		});
     },
     methods: {
+    	onChange: function () {
+    		// console.log("testChange");
+            console.log("onChange: " ,event.target.value)
+            if(event.target.value.includes(".")){
+            	this.thresholdVisible = true;
+            	this.resolvetype = "auto";
+            } else {
+            	this.thresholdVisible = false;
+            	this.resolvetype = "manual";
+            }
+        },
     	setstuff(){
     		let thisthing = this
     		console.log("1setting stuff to yes ", this.stuff);
@@ -244,8 +272,14 @@ export default {
     		console.log("createMarket ", JSON.stringify(this.form), "datetime ", this.datetime, "useraddress ", this.userData.profile.stxAddress.testnet);
     		let unixtime = new Date(this.datetime).getTime()/1000;
     		// console.log("unixtime ", unixtime);
+    		var caddress = thisthing.form.oracle.trim();
+    		if(thisthing.form.oracle.trim().includes(".")){
+    			// auto resolve oracle - will have contract address + contract name
+    			caddress = thisthing.form.oracle.trim().split(".")[0];
+    		}
+
     		// validate
-    		if(thisthing.form.question == "" || thisthing.form.paypervote == "" || thisthing.form.oracle.trim() == "" || this.datetime == null){
+    		if(thisthing.form.question == "" || thisthing.form.paypervote == "" || thisthing.form.oracle.trim() == "" || this.datetime == null || caddress == ""){
     			// using options
 				this.$notify({
 				  title: 'Empty Fields',
@@ -255,17 +289,18 @@ export default {
 				});
 				return;
     		}
+
     		// thisthing.statustext = "Creating Market...";
     		thisthing.isLoading = true;
-    		
-    		// (createMarket (question (string-ascii 99)) (paypervote int) (resolver principal) (resolveTime int) (resolveType (string-ascii 10)))
-    		// (question (string-ascii 99)) (paypervote uint) (resolver principal) (resolveTime uint) (resolveType (string-ascii 10)
+    		// console.log(thisthing.form.question, parseInt(thisthing.form.threshold), parseInt(thisthing.form.paypervote), caddress, parseInt(unixtime), thisthing.resolvetype);
+    		// (createMarket (question (string-ascii 99)) (threshold int) (paypervote uint) (resolver principal) (resolveTime uint) (resolveType (string-ascii 10)))
     		const functionArgs = [
 			  stringAsciiCV(thisthing.form.question),
+			  intCV(parseInt(thisthing.form.threshold)),
 			  uintCV(parseInt(thisthing.form.paypervote)),
-			  standardPrincipalCV(thisthing.form.oracle.trim()),
+			  standardPrincipalCV(caddress),
 			  uintCV(parseInt(unixtime)),
-			  stringAsciiCV("manual"),
+			  stringAsciiCV(thisthing.resolvetype),
 			  // uintCV(1234),
 			  // intCV(-234),
 			  // bufferCV(Buffer.from('hello, world')),
@@ -290,7 +325,7 @@ export default {
 			    const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
   				console.log('View transaction in explorer:', explorerTransactionUrl);
 				thisthing.isLoading = false;
-			  	db.ref(thisthing.contractname).push({marketId: thisthing.marketcount+1, account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, paypervote: thisthing.form.paypervote, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:"manual", yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
+			  	db.ref(thisthing.contractname).push({marketId: thisthing.marketcount+1, account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, threshold: thisthing.form.threshold, paypervote: thisthing.form.paypervote, caddress: caddress, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:thisthing.resolvetype, yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
 				this.$notify({
 				  title: 'Create Market',
 				  text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
@@ -300,7 +335,10 @@ export default {
 				this.$emit('exit', true);
 			  },
 			};
-			await openContractCall(options);
+			await openContractCall(options)
+			// .catch(error => {
+			// 	console.log("openContractCall error: ", error);
+			// })
     	},
     	async joinMarket(){
 			let thisthing = this

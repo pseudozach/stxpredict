@@ -8,6 +8,9 @@
   </div>
 </template> -->
 
+<!-- v-tooltip="Resolve market if you are the resolver." -->
+<!-- v-tooltip="Request Oracle to resolve the Market." -->
+
 <!-- compactMode -->
 <!-- :fixed-header="true" -->
 <template>
@@ -34,6 +37,7 @@
         </span>
         <span v-else-if="props.column.field == 'join'">
           <!-- style="font-weight: bold; color: blue;" -->
+          <!-- <button v-tooltip="'You have new messages.'"></button> -->
           <VueLoadingButton
             aria-label="Join Market"
             style="background-color: green;"
@@ -43,6 +47,7 @@
             data-id="up"
             :styled="true"
             :loading="isLoadingJoin"
+            v-tooltip="'Join market, positive outcome.'"
           ><font-awesome-icon icon="thumbs-up" /></VueLoadingButton>
           <VueLoadingButton
             aria-label="Join Market"
@@ -52,34 +57,42 @@
             data-id="down"
             :styled="true"
             :loading="isLoadingJoin"
+            v-tooltip="'Join market, negative outcome.'"
           ><font-awesome-icon icon="thumbs-down" /></VueLoadingButton>
         </span>
         <span v-else-if="props.column.field == 'resolve'">
           <!-- style="font-weight: bold; color: blue;" -->
-          <VueLoadingButton
-            aria-label="Resolve Market"
-            style="background-color: green;"
-            class="button"
-            @click.native="setThumbsUp"
-            :styled="true"
-            :loading="isLoadingResolve"
-          ><font-awesome-icon icon="thumbs-up" /></VueLoadingButton>
-          <VueLoadingButton
-            aria-label="Resolve Market"
-            style="margin-left: 10px; background-color: red;"
-            class="button"
-            @click.native="setThumbsDown"
-            :styled="true"
-            :loading="isLoadingResolve"
-          ><font-awesome-icon icon="thumbs-down" /></VueLoadingButton>
-          <VueLoadingButton
-            aria-label="Resolve Market"
-            style="margin-left: 10px; background-color: gray;"
-            class="button"
-            @click.native="setQuestion"
-            :styled="true"
-            :loading="isLoadingResolve"
-          ><font-awesome-icon icon="question" /></VueLoadingButton>
+          <span v-if="props.row.resolveType == 'manual'">
+            <VueLoadingButton
+              aria-label="Resolve Market"
+              style="background-color: green;"
+              class="button"
+              @click.native="setThumbsUp"
+              :styled="true"
+              :loading="isLoadingResolve"
+              v-tooltip="'Resolve market if you are the resolver.'"
+            ><font-awesome-icon icon="thumbs-up" /></VueLoadingButton>
+            <VueLoadingButton
+              aria-label="Resolve Market"
+              style="margin-left: 10px; background-color: red;"
+              class="button"
+              @click.native="setThumbsDown"
+              :styled="true"
+              :loading="isLoadingResolve"
+              v-tooltip="'Resolve market if you are the resolver.'"
+            ><font-awesome-icon icon="thumbs-down" /></VueLoadingButton>
+          </span>
+          <span v-else>
+            <VueLoadingButton
+              aria-label="Resolve Market"
+              style="margin-left: 10px; background-color: gray;"
+              class="button"
+              @click.native="setQuestion"
+              :styled="true"
+              :loading="isLoadingResolve"
+              v-tooltip="'Request Oracle to resolve the market.'"
+            ><font-awesome-icon icon="question" /></VueLoadingButton>
+          </span>
         </span>
         <span v-else-if="props.column.field == 'exit'">
           <!-- style="font-weight: bold; color: blue;" -->
@@ -88,6 +101,7 @@
             class="button"
             :styled="true"
             :loading="isLoadingExit"
+            v-tooltip="'Request payout from a resolved market.'"
           ><font-awesome-icon icon="times" /></VueLoadingButton>
         </span>
         <span v-else>
@@ -97,10 +111,6 @@
     </vue-good-table>
   </div>
 </template>
-
-
-
-
 
 <script>
 // import VueTableDynamic from 'vue-table-dynamic'
@@ -135,6 +145,8 @@ import VueMeta from 'vue-meta'
 Vue.use(VueMeta)
 // import { db } from '../main'
 
+import VTooltip from 'v-tooltip'
+Vue.use(VTooltip)
 
   // stacks stuff
   import { AppConfig, UserSession, showConnect } from '@stacks/connect';
@@ -382,7 +394,7 @@ export default {
           const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
           console.log('View transaction in explorer:', explorerTransactionUrl);
         thisthing.isLoadingJoin = false;
-        var updateobj = {yescount: newyescount, nocount: newnocount, balance: parseInt(marketobj.balance+marketobj.paypervote)};
+        var updateobj = {yescount: newyescount, nocount: newnocount, balance: parseInt(parseInt(marketobj.balance)+parseInt(marketobj.paypervote))};
         console.log("market, updateobj: ",marketobj.merchant, updateobj);
           db.ref(thisthing.contractname+"/"+marketobj.merchant).update(updateobj);
         this.$notify({
@@ -394,7 +406,10 @@ export default {
         // this.$emit('exit', true);
         },
       };
-      await openContractCall(options);
+      await openContractCall(options)
+      // .catch(error => {
+      //   console.log("openContractCall error: ", error);
+      // })
       },
     async resolveMarket(marketobj){
       let thisthing = this
@@ -669,7 +684,7 @@ export default {
       isLoadingExit: false,
       fatype: 'nothing',
       userData: null,
-      contractname: 'stxpredict_v3',
+      contractname: 'stxpredict_v4',
       columns: [
         // {
         //   label: 'Market Creator',
@@ -783,6 +798,115 @@ export default {
 </script>
 
 
+<style>
+  .tooltip {
+    display: block !important;
+    z-index: 10000;
+  }
 
+  .tooltip .tooltip-inner {
+    /*background: black;*/
+    background: #85cbf6;
+    color: white;
+    border-radius: 16px;
+    padding: 5px 10px 4px;
+  }
+
+  .tooltip .tooltip-arrow {
+    width: 0;
+    height: 0;
+    border-style: solid;
+    position: absolute;
+    margin: 5px;
+    /*border-color: black;*/
+    border-color: #85cbf6;
+    /*background: #85cbf6;*/
+    z-index: 1;
+  }
+
+  .tooltip[x-placement^="top"] {
+    margin-bottom: 5px;
+  }
+
+  .tooltip[x-placement^="top"] .tooltip-arrow {
+    border-width: 5px 5px 0 5px;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+    border-bottom-color: transparent !important;
+    bottom: -5px;
+    left: calc(50% - 5px);
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .tooltip[x-placement^="bottom"] {
+    margin-top: 5px;
+  }
+
+  .tooltip[x-placement^="bottom"] .tooltip-arrow {
+    border-width: 0 5px 5px 5px;
+    border-left-color: transparent !important;
+    border-right-color: transparent !important;
+    border-top-color: transparent !important;
+    top: -5px;
+    left: calc(50% - 5px);
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .tooltip[x-placement^="right"] {
+    margin-left: 5px;
+  }
+
+  .tooltip[x-placement^="right"] .tooltip-arrow {
+    border-width: 5px 5px 5px 0;
+    border-left-color: transparent !important;
+    border-top-color: transparent !important;
+    border-bottom-color: transparent !important;
+    left: -5px;
+    top: calc(50% - 5px);
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .tooltip[x-placement^="left"] {
+    margin-right: 5px;
+  }
+
+  .tooltip[x-placement^="left"] .tooltip-arrow {
+    border-width: 5px 0 5px 5px;
+    border-top-color: transparent !important;
+    border-right-color: transparent !important;
+    border-bottom-color: transparent !important;
+    right: -5px;
+    top: calc(50% - 5px);
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .tooltip.popover .popover-inner {
+    background: #f9f9f9;
+    color: black;
+    padding: 24px;
+    border-radius: 5px;
+    box-shadow: 0 5px 30px rgba(black, .1);
+  }
+
+  .tooltip.popover .popover-arrow {
+    border-color: #f9f9f9;
+  }
+
+  .tooltip[aria-hidden='true'] {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity .15s, visibility .15s;
+  }
+
+  .tooltip[aria-hidden='false'] {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity .15s;
+  }
+</style>
 
 
