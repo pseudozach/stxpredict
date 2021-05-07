@@ -1,4 +1,4 @@
-;; This is stxpredict - A prediction market on Stacks - v3
+;; This is stxpredict - A prediction market on Stacks - v4
 ;; Create a new market by sending description, resolver account, resolve type: auto or manual and resolve date/time.
 ;; Once resolve date/time has passed, resolver can call resolveMarket with the final result. Users will manually exit markets.
 ;; For Auto resolve markets, user can ping oracle to request resolution of the market.

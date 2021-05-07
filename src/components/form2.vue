@@ -25,7 +25,7 @@
 			  name="oracle"
 			  placeholder="--- Available Automatic Oracles ---"
 			  :allowEmpty="true"
-			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v2_btcusd': 'BTC / USD', 'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v2_stxusd': 'STX / USD'}"
+			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v4_btcusd': 'BTC / USD', 'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v4_stxusd': 'STX / USD'}"
 			  :selected.sync="form.oracle"
 			  @change.native="onChange"
 			  style="margin: 10px;"
