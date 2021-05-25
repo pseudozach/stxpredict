@@ -16,9 +16,9 @@
         </header>
 
         <section class="modal-body">
-          <slot name="body">
+<!--           <slot name="body">
             Make a prediction, choose who resolves (automatic or manual oracle) and create market.
-          </slot>
+          </slot> -->
           <Form2 @exit="closeModal"/>
          </section>
 

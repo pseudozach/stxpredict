@@ -340,6 +340,7 @@ export default {
 
     		// thisthing.statustext = "Creating Market...";
     		thisthing.isLoadingResolver = true;
+    		this.thresholdVisible = true;
 
     		// replace resolver_v1.clar with user options and deploy contract.
             const response = await fetch(`./resolver_v1.clar`);
@@ -366,7 +367,6 @@ export default {
 			    var resolveraddress = this.userData.profile.stxAddress.testnet + "." + contractname;
 			    console.log("resolveraddress: ", resolveraddress);
 			    thisthing.form.oracle = resolveraddress;
-			    this.thresholdVisible = true;
 				this.$notify({
 				  title: 'Deploy Contract',
 				  text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
