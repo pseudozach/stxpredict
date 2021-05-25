@@ -33,7 +33,21 @@
       <template slot="table-row" slot-scope="props">
         <span v-if="props.column.field == 'txid'">
           <!-- style="font-weight: bold; color: blue;" -->
-          <a :href="props.row.txid" target="_blank">txid link</a> 
+          <a :href="props.row.txid" target="_blank"><font-awesome-icon icon="external-link-alt" /></a> 
+        </span>
+        <span v-else-if="props.column.field == 'oracle'">
+          <!-- https://explorer.stacks.co/txid/STZ0RAC1EFTH949T4W2SYY6YBHJRMAF4ED5QB123.oracle-v1?chain=testnet -->
+          <a :href="'https://explorer.stacks.co/txid/'+props.row.oracle+'?chain=testnet'" target="_blank">
+            <font-awesome-icon icon="key" />
+          </a> 
+        </span>
+        <span v-else-if="props.column.field == 'resolved'">
+          <span v-if="props.row.resolved == true">
+            <font-awesome-icon icon="check" />
+          </span>
+          <span v-else>
+            <font-awesome-icon icon="times" />
+          </span>
         </span>
         <span v-else-if="props.column.field == 'join'">
           <!-- style="font-weight: bold; color: blue;" -->
@@ -44,6 +58,7 @@
             class="button"
             label="up"
             @click.native="setThumbsUp"
+            :disabled="props.row.resolved"
             data-id="up"
             :styled="true"
             :loading="isLoadingJoin"
@@ -54,6 +69,7 @@
             style="margin-left: 10px; background-color: red;"
             class="button"
             @click.native="setThumbsDown"
+            :disabled="props.row.resolved"
             data-id="down"
             :styled="true"
             :loading="isLoadingJoin"
@@ -68,18 +84,20 @@
               style="background-color: green;"
               class="button"
               @click.native="setThumbsUp"
+              :disabled="props.row.resolved"
               :styled="true"
               :loading="isLoadingResolve"
-              v-tooltip="'Resolve market if you are the resolver.'"
+              v-tooltip="'Resolve market as true if you are the resolver.'"
             ><font-awesome-icon icon="thumbs-up" /></VueLoadingButton>
             <VueLoadingButton
               aria-label="Resolve Market"
               style="margin-left: 10px; background-color: red;"
               class="button"
               @click.native="setThumbsDown"
+              :disabled="props.row.resolved"
               :styled="true"
               :loading="isLoadingResolve"
-              v-tooltip="'Resolve market if you are the resolver.'"
+              v-tooltip="'Resolve market as false if you are the resolver.'"
             ><font-awesome-icon icon="thumbs-down" /></VueLoadingButton>
           </span>
           <span v-else>
@@ -88,6 +106,7 @@
               style="margin-left: 10px; background-color: gray;"
               class="button"
               @click.native="setQuestion"
+              :disabled="props.row.resolved"
               :styled="true"
               :loading="isLoadingResolve"
               v-tooltip="'Request Oracle to resolve the market.'"
@@ -132,6 +151,8 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faThumbsUp } from '@fortawesome/free-solid-svg-icons'
 import { faThumbsDown } from '@fortawesome/free-solid-svg-icons'
 import { faQuestion } from '@fortawesome/free-solid-svg-icons'
+import { faKey } from '@fortawesome/free-solid-svg-icons'
+import { faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 library.add(faPlus)
 library.add(faCheck)
@@ -139,6 +160,8 @@ library.add(faTimes)
 library.add(faThumbsUp)
 library.add(faThumbsDown)
 library.add(faQuestion)
+library.add(faKey)
+library.add(faExternalLinkAlt)
 
 import Vue from 'vue'
 import VueMeta from 'vue-meta'
@@ -714,6 +737,12 @@ export default {
           type: 'number',
           // type: 'percentage',
         },
+        {
+          label: 'Resolved',
+          field: 'resolved',
+          type: 'boolean',
+          // type: 'percentage',
+        },        
         {
           label: 'Oracle',
           field: 'oracle',

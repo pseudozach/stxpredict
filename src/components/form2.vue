@@ -25,14 +25,59 @@
 			  name="oracle"
 			  placeholder="--- Available Automatic Oracles ---"
 			  :allowEmpty="true"
-			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v4_btcusd': 'BTC / USD', 'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v4_stxusd': 'STX / USD'}"
+			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v4_btcusd': 'BTC / USD',
+			  'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v4_stxusd': 'STX / USD',
+			  'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.resolver_v1_coinbasebtc': 'BTC / USD (Exchange Signed Oracle)'
+			  }"
 			  :selected.sync="form.oracle"
 			  @change.native="onChange"
 			  style="margin: 10px;"
 			/>
+
+			<div style="border: 1px solid #4e5d7c; padding: 2px;">
+				<span>Deploy your own resolver oracle contract based on signed exchange data (optional)</span>
+				<fvl-select
+				  label="Select Available Exchange"
+				  :selected.sync="ooexchange"
+				  name="ooexchange"
+				  :options="{ 'coinbase': 'coinbase (BTC, ETH, LINK, COMP, UNI, SNX)',
+				  'okcoin': 'okcoin (BTC, ETH)',
+				  'artifix-okcoin': 'artifix-okcoin (BTC, ETH, LINK, STX-BTC, STX, COMP, LTC, UNI)',
+				  'artifix-binance': 'artifix-binance (ETH-BTC, LINK-BTC, LINK-ETH, STX-BTC, STX-USDT, COMP-BTC, LTC-BTC, UNI-BTC, AAVE-BTC, SUSHI-BTC)'
+				  }"
+				  style="margin: 10px;"
+				/>
+				<fvl-select
+				  label="Select Available Pairs"
+				  name="oopair"
+				  :selected.sync="oopair"
+				  :options="{
+				  'BTC': 'BTC',
+				  'ETH': 'ETH',
+				  'LINK': 'LINK',
+				  'COMP': 'COMP',
+				  'UNI': 'UNI',
+				  'SNX': 'SNX',
+				  'STX': 'STX',
+				  'LTC': 'LTC',
+				  'ETH-BTC': 'ETH-BTC',
+				  'STX-BTC': 'STX-BTC'
+				  }"
+				  style="margin: 10px;"
+				/>
+		  		<VueLoadingButton 
+			        aria-label="Create Resolver"
+			        class="button"
+			        @click.native="createResolver"
+			        :loading="isLoadingResolver"
+			        :styled="true"
+			  	>Create Resolver Contract
+			  	</VueLoadingButton>
+			</div>
+
 			<fvl-input 
 				:value.sync="form.oracle" 
-				label="Manual Oracle Account" 
+				label="Oracle Account" 
 				name="manual oracle address" 
 				placeholder="e.g. ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
 				style="margin: 10px;"
@@ -145,7 +190,7 @@
 	const testnet = new StacksTestnet();
 	const mainnet = new StacksMainnet();
 
-    import { openContractCall } from '@stacks/connect';
+    import { openContractCall, openContractDeploy } from '@stacks/connect';
     import {
 	  uintCV,
 	  intCV,
@@ -208,12 +253,15 @@ export default {
 		    stuff: '',
 		    isLoading: false,
 		    isLoadingContract: false,
+		    isLoadingResolver: false,
 		    userData: null,
 		    marketcount: 0,
 		    contractname: 'stxpredict_v4',
 		    thresholdVisible: false,
 		    key: '',
 		    resolvetype: 'manual',
+		    ooexchange: '',
+		    oopair: '',
 		}
 	},
     components: {
@@ -266,6 +314,67 @@ export default {
     		console.log("2setting stuff to yes ", this.stuff);
     		// this.$refs.Modal.close();
     		this.$emit('exit', true);
+    	},
+    	async createResolver(){
+			let thisthing = this
+    		console.log("createResolver ", JSON.stringify(this.form), "useraddress ", this.userData.profile.stxAddress.testnet);
+    		// let unixtime = new Date(this.datetime).getTime()/1000;
+    		// // console.log("unixtime ", unixtime);
+    		// var caddress = thisthing.form.oracle.trim();
+    		// if(thisthing.form.oracle.trim().includes(".")){
+    		// 	// auto resolve oracle - will have contract address + contract name
+    		// 	caddress = thisthing.form.oracle.trim().split(".")[0];
+    		// }
+
+    		// validate
+    		if(thisthing.ooexchange == "" || thisthing.oopair == ""){
+    			// using options
+				this.$notify({
+				  title: 'Empty Fields',
+				  text: 'Please fill out all required information.',
+				  type: 'error',
+				  duration: 10000,
+				});
+				return;
+    		}
+
+    		// thisthing.statustext = "Creating Market...";
+    		thisthing.isLoadingResolver = true;
+
+    		// replace resolver_v1.clar with user options and deploy contract.
+            const response = await fetch(`./resolver_v1.clar`);
+            const resolvercode = await response.text();
+            var modresolver = resolvercode.replace("coinbase",thisthing.ooexchange);
+            modresolver = modresolver.replace("BTC",thisthing.oopair);
+            var contractname = 'resolver_v1_'+thisthing.ooexchange.toLowerCase()+"_"+thisthing.oopair.toLowerCase()
+            console.log("modresolver: ", modresolver, contractname);
+			// const codeBody = '(begin (print "hello, world"))';
+
+			openContractDeploy({
+			  codeBody: modresolver,
+			  contractName: contractname,
+			  network: testnet,
+			  appDetails: {
+			    name: 'stxpredict',
+			    icon: window.location.origin + './assets/icon.png',
+			  },
+			  onFinish: data => {
+			    console.log('Stacks Transaction:', data.stacksTransaction);
+			    console.log('Transaction ID:', data.txId);
+			    // console.log('Raw transaction:', data.txRaw);
+			    thisthing.isLoadingResolver = false;
+			    var resolveraddress = this.userData.profile.stxAddress.testnet + "." + contractname;
+			    console.log("resolveraddress: ", resolveraddress);
+			    thisthing.form.oracle = resolveraddress;
+			    this.thresholdVisible = true;
+				this.$notify({
+				  title: 'Deploy Contract',
+				  text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
+				  type: 'success',
+				  duration: 10000,
+				});
+			  },
+			});
     	},
     	async createMarket(){
 			let thisthing = this

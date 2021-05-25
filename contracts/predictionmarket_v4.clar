@@ -23,7 +23,7 @@
 (define-trait prediction-market-oracle
   (
     ;; oracle shall accept requests from users to resolve markets
-    (readMarketThreshold (int) (response bool uint))
+    (requestResolution (int) (response bool uint))
 
     ;; oracle shall read threshold value from market
     (readMarketThreshold (int) (response int uint))
