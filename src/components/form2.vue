@@ -27,7 +27,8 @@
 			  :allowEmpty="true"
 			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v4_btcusd': 'BTC / USD',
 			  'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v4_stxusd': 'STX / USD',
-			  'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.resolver_v1_coinbasebtc': 'BTC / USD (Exchange Signed Oracle)'
+			  'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.resolver_v1_coinbasebtc': 'BTC / USD (Exchange Signed Oracle)',
+			  '': 'Other pre-deployed glue contract (enter account.contract-name manually)'
 			  }"
 			  :selected.sync="form.oracle"
 			  @change.native="onChange"
