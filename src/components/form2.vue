@@ -28,7 +28,7 @@
 			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v4_btcusd': 'BTC / USD',
 			  'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v4_stxusd': 'STX / USD',
 			  'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.resolver_v1_coinbasebtc': 'BTC / USD (Exchange Signed Oracle)',
-			  '': 'Other pre-deployed glue contract (enter account.contract-name manually)'
+			  'enter account.contract-name manually': 'Other pre-deployed glue contract'
 			  }"
 			  :selected.sync="form.oracle"
 			  @change.native="onChange"
@@ -389,7 +389,7 @@ export default {
     		}
 
     		// validate
-    		if(thisthing.form.question == "" || thisthing.form.paypervote == "" || thisthing.form.oracle.trim() == "" || this.datetime == null || caddress == ""){
+    		if(thisthing.form.question == "" || thisthing.form.paypervote == "" || thisthing.form.oracle.trim() == "" || thisthing.form.oracle == "enter account.contract-name manually" || this.datetime == null || caddress == ""){
     			// using options
 				this.$notify({
 				  title: 'Empty Fields',
