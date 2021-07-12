@@ -25,10 +25,8 @@
 			  name="oracle"
 			  placeholder="--- Available Automatic Oracles ---"
 			  :allowEmpty="true"
-			  :options="{ 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.oracle_v4_btcusd': 'BTC / USD',
-			  'ST11NHWNT1GYPAJH3ZN8XH4SJ1EYE7R0A3C6ZKJSX.oracle_v4_stxusd': 'STX / USD',
-			  'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.resolver_v1_coinbasebtc': 'BTC / USD (Exchange Signed Oracle)',
-			  'enter account.contract-name manually': 'Other pre-deployed glue contract'
+			  :options="{ 'SP2507VNQZC9VBXM7X7KB4SF4QJDJRSWHG4V39WPY.resolver_v1_coinbase_btc' : 'Coinbase signed BTC Oracle', 
+			  	'enter account.contract-name manually': 'Other pre-deployed glue contract'
 			  }"
 			  :selected.sync="form.oracle"
 			  @change.native="onChange"
@@ -36,7 +34,7 @@
 			/>
 
 			<div style="border: 1px solid #4e5d7c; padding: 2px;">
-				<span>Deploy your own resolver oracle contract based on signed exchange data (optional)</span>
+				<span>Deploy your own resolver oracle contract based on signed exchange data</span>
 				<fvl-select
 				  label="Select Available Exchange"
 				  :selected.sync="ooexchange"
@@ -80,7 +78,7 @@
 				:value.sync="form.oracle" 
 				label="Oracle Account" 
 				name="manual oracle address" 
-				placeholder="e.g. ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ"
+				placeholder="e.g. SP15RGYVK9ACFQWMFFA2TVASDVZH38B4VATY8CJ01"
 				style="margin: 10px;"
 			/>
 
@@ -257,12 +255,15 @@ export default {
 		    isLoadingResolver: false,
 		    userData: null,
 		    marketcount: 0,
-		    contractname: 'stxpredict_v4',
+		    contractaddress: 'SP15RGYVK9ACFQWMFFA2TVASDVZH38B4VATY8CJ01',
+		    contractname: 'stxpredict_v5',
 		    thresholdVisible: false,
 		    key: '',
 		    resolvetype: 'manual',
 		    ooexchange: '',
 		    oopair: '',
+		    activeNetwork: mainnet,
+		    activeNetworkStr: "mainnet",
 		}
 	},
     components: {
@@ -318,7 +319,7 @@ export default {
     	},
     	async createResolver(){
 			let thisthing = this
-    		console.log("createResolver ", JSON.stringify(this.form), "useraddress ", this.userData.profile.stxAddress.testnet);
+    		console.log("createResolver ", JSON.stringify(this.form), "useraddress ", this.userData.profile.stxAddress[thisthing.activeNetworkStr]);
     		// let unixtime = new Date(this.datetime).getTime()/1000;
     		// // console.log("unixtime ", unixtime);
     		// var caddress = thisthing.form.oracle.trim();
@@ -355,7 +356,7 @@ export default {
 			openContractDeploy({
 			  codeBody: modresolver,
 			  contractName: contractname,
-			  network: testnet,
+			  network: thisthing.activeNetwork,
 			  appDetails: {
 			    name: 'stxpredict',
 			    icon: window.location.origin + './assets/icon.png',
@@ -365,7 +366,7 @@ export default {
 			    console.log('Transaction ID:', data.txId);
 			    // console.log('Raw transaction:', data.txRaw);
 			    thisthing.isLoadingResolver = false;
-			    var resolveraddress = this.userData.profile.stxAddress.testnet + "." + contractname;
+			    var resolveraddress = this.userData.profile.stxAddress[thisthing.activeNetworkStr] + "." + contractname;
 			    console.log("resolveraddress: ", resolveraddress);
 			    thisthing.form.oracle = resolveraddress;
 				this.$notify({
@@ -379,7 +380,7 @@ export default {
     	},
     	async createMarket(){
 			let thisthing = this
-    		console.log("createMarket ", JSON.stringify(this.form), "datetime ", this.datetime, "useraddress ", this.userData.profile.stxAddress.testnet);
+    		console.log("createMarket ", JSON.stringify(this.form), "datetime ", this.datetime, "useraddress ", this.userData.profile.stxAddress[thisthing.activeNetworkStr], this.userData.profile);
     		let unixtime = new Date(this.datetime).getTime()/1000;
     		// console.log("unixtime ", unixtime);
     		var caddress = thisthing.form.oracle.trim();
@@ -419,8 +420,8 @@ export default {
 			];
 			console.log("functionArgs: ", JSON.stringify(functionArgs));
 			const options = {
-			  network: testnet,
-			  contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
+			  network: thisthing.activeNetwork,
+			  contractAddress: thisthing.contractaddress,
 			  contractName: thisthing.contractname,
 			  functionName: 'createMarket',
 			  functionArgs,
@@ -432,10 +433,10 @@ export default {
 			    console.log('Stacks Transaction:', data.stacksTransaction);
 			    console.log('Transaction ID:', data.txId);
 			    console.log('Raw transaction:', data.txRaw);
-			    const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+			    const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=' + thisthing.activeNetworkStr;
   				console.log('View transaction in explorer:', explorerTransactionUrl);
 				thisthing.isLoading = false;
-			  	db.ref(thisthing.contractname).push({marketId: thisthing.marketcount+1, account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, threshold: thisthing.form.threshold, paypervote: thisthing.form.paypervote, caddress: caddress, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:thisthing.resolvetype, yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
+			  	db.ref(thisthing.contractname).push({marketId: thisthing.marketcount+1, account: thisthing.userData.profile.stxAddress[thisthing.activeNetworkStr], question: thisthing.form.question, threshold: thisthing.form.threshold, paypervote: thisthing.form.paypervote, caddress: caddress, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain="+thisthing.activeNetworkStr, resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:thisthing.resolvetype, yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
 				this.$notify({
 				  title: 'Create Market',
 				  text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,
@@ -452,7 +453,7 @@ export default {
     	},
     	async joinMarket(){
 			let thisthing = this
-    		console.log("createMarket ", JSON.stringify(this.form), "datetime ", this.datetime, "useraddress ", this.userData.profile.stxAddress.testnet);
+    		console.log("joinMarket ", JSON.stringify(this.form), "datetime ", this.datetime, "useraddress ", this.userData.profile.stxAddress[thisthing.activeNetworkStr]);
     		let unixtime = new Date(this.datetime).getTime()/1000;
     		// console.log("unixtime ", unixtime);
     		// validate
@@ -485,8 +486,8 @@ export default {
 			];
 			console.log("functionArgs: ", JSON.stringify(functionArgs));
 			const options = {
-			  network: testnet,
-			  contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
+			  network: thisthing.activeNetwork,
+			  contractAddress: thisthing.contractaddress,
 			  contractName: thisthing.contractname,
 			  functionName: 'createMarket',
 			  functionArgs,
@@ -498,10 +499,10 @@ export default {
 			    console.log('Stacks Transaction:', data.stacksTransaction);
 			    console.log('Transaction ID:', data.txId);
 			    console.log('Raw transaction:', data.txRaw);
-			    const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+			    const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain='+thisthing.activeNetworkStr;
   				console.log('View transaction in explorer:', explorerTransactionUrl);
 				thisthing.isLoading = false;
-			  	db.ref(thisthing.contractname).push({account: thisthing.userData.profile.stxAddress.testnet, question: thisthing.form.question, paypervote: thisthing.form.paypervote, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain=testnet", resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:"manual", yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
+			  	db.ref(thisthing.contractname).push({account: thisthing.userData.profile.stxAddress[thisthing.activeNetworkStr], question: thisthing.form.question, paypervote: thisthing.form.paypervote, oracle: thisthing.form.oracle.trim(), txid: "https://explorer.stacks.co/txid/"+data.txId+"?chain="+thisthing.activeNetworkStr, resolveTime: thisthing.datetime, unixtime: unixtime, resolveType:"manual", yescount: 0, nocount: 0, balance:0, resolved: false, result: false,  createdAt: firebase.database.ServerValue.TIMESTAMP});
 				this.$notify({
 				  title: 'Create Market',
 				  text: 'Tx broadcasted. Please wait for it to be confirmed: ' + explorerTransactionUrl,

@@ -37,7 +37,7 @@
         </span>
         <span v-else-if="props.column.field == 'oracle'">
           <!-- https://explorer.stacks.co/txid/STZ0RAC1EFTH949T4W2SYY6YBHJRMAF4ED5QB123.oracle-v1?chain=testnet -->
-          <a :href="'https://explorer.stacks.co/txid/'+props.row.oracle+'?chain=testnet'" target="_blank">
+          <a :href="'https://explorer.stacks.co/txid/'+props.row.oracle+'?chain=mainnet'" target="_blank">
             <font-awesome-icon icon="key" />
           </a> 
         </span>
@@ -280,6 +280,7 @@ export default {
   //   '$route': 'fetchData'
   // },
   mounted: function () {
+    // this.activeNetwork = mainnet;
     // YYYY-MM-DD hh:mm a
     // var mindate = moment().format('YYYY-MM-DD hh:mm a');
     // // console.log("mindate: ", mindate);
@@ -392,7 +393,7 @@ export default {
       ];
       // Add an optional post condition
       // See below for details on constructing post conditions
-      const postConditionAddress = 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ';
+      const postConditionAddress = thisthing.contractaddress;
       const postConditionCode = FungibleConditionCode.LessEqual;
       const postConditionAmount = new BigNum(parseInt(marketobj.paypervote)*2);
       const postConditions = [
@@ -400,8 +401,8 @@ export default {
       ];
       console.log("join functionArgs: ", JSON.stringify(functionArgs));
       const options = {
-        network: testnet,
-        contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
+        network: thisthing.activeNetwork,
+        contractAddress: thisthing.contractaddress,
         contractName: thisthing.contractname,
         functionName: 'joinMarket',
         functionArgs,
@@ -414,7 +415,7 @@ export default {
           console.log('Stacks Transaction:', data.stacksTransaction);
           console.log('Transaction ID:', data.txId);
           // console.log('Raw transaction:', data.txRaw);
-          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=' + activeNetworkStr;
           console.log('View transaction in explorer:', explorerTransactionUrl);
         thisthing.isLoadingJoin = false;
         var updateobj = {yescount: newyescount, nocount: newnocount, balance: parseInt(parseInt(marketobj.balance)+parseInt(marketobj.paypervote))};
@@ -436,7 +437,7 @@ export default {
       },
     async resolveMarket(marketobj){
       let thisthing = this
-      console.log("resolveMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.testnet);
+      console.log("resolveMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.mainnet);
       // let unixtime = new Date(this.datetime).getTime()/1000;
       // console.log("unixtime ", unixtime);
       // validate
@@ -478,8 +479,8 @@ export default {
       ];
       console.log("functionArgs: ", JSON.stringify(functionArgs));
       const options = {
-        network: testnet,
-        contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
+        network: activeNetwork,
+        contractAddress: thisthing.contractaddress,
         contractName: thisthing.contractname,
         functionName: 'resolveMarket',
         functionArgs,
@@ -510,7 +511,7 @@ export default {
       },
     async requestResolveMarket(marketobj){
       let thisthing = this
-      console.log("resolveMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.testnet);
+      console.log("resolveMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.mainnet);
       // let unixtime = new Date(this.datetime).getTime()/1000;
       // console.log("unixtime ", unixtime);
       // validate
@@ -559,7 +560,7 @@ export default {
       }
       console.log("caddress, cname: ", caddress, cname);
       const options = {
-        network: testnet,
+        network: thisthing.activeNetwork,
         contractAddress: caddress,
         contractName: cname,
         functionName: 'requestResolution',
@@ -572,7 +573,7 @@ export default {
           console.log('Stacks Transaction:', data.stacksTransaction);
           console.log('Transaction ID:', data.txId);
           // console.log('Raw transaction:', data.txRaw);
-          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=' + activeNetworkStr;
           console.log('View transaction in explorer:', explorerTransactionUrl);
         thisthing.isLoadingResolve = false;
         var updateobj = {result: newresult, resolved: true};
@@ -591,7 +592,7 @@ export default {
       },
     async exitMarket(marketobj){
       let thisthing = this
-      console.log("exitMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.testnet);
+      console.log("exitMarket: ", JSON.stringify(marketobj), "useraddress ", this.userData.profile.stxAddress.mainnet);
       // let unixtime = new Date(this.datetime).getTime()/1000;
       // console.log("unixtime ", unixtime);
       // validate
@@ -633,8 +634,8 @@ export default {
       ];
       console.log("functionArgs: ", JSON.stringify(functionArgs));
       const options = {
-        network: testnet,
-        contractAddress: 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ',
+        network: activeNetwork,
+        contractAddress: thisthing.contractaddress,
         contractName: thisthing.contractname,
         functionName: 'exitMarket',
         functionArgs,
@@ -646,7 +647,7 @@ export default {
           console.log('Stacks Transaction:', data.stacksTransaction);
           console.log('Transaction ID:', data.txId);
           console.log('Raw transaction:', data.txRaw);
-          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=testnet';
+          const explorerTransactionUrl = 'https://explorer.stacks.co/txid/'+data.txId+'?chain=' + activeNetworkStr;
           console.log('View transaction in explorer:', explorerTransactionUrl);
         thisthing.isLoadingResolve = false;
         // var updateobj = {balance: marketobj.balance, resolved: true};
@@ -707,7 +708,11 @@ export default {
       isLoadingExit: false,
       fatype: 'nothing',
       userData: null,
-      contractname: 'stxpredict_v4',
+      activeNetwork: mainnet,
+      activeNetworkStr: "mainnet",
+      contractaddress: 'SP15RGYVK9ACFQWMFFA2TVASDVZH38B4VATY8CJ01',
+      // testnet contractaddress ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ
+      contractname: 'stxpredict_v5',
       columns: [
         // {
         //   label: 'Market Creator',

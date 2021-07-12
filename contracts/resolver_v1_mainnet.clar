@@ -3,7 +3,7 @@
 
 (define-read-only (readMarketThreshold (marketId int))
   (begin
-    (contract-call? 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.stxpredict_v4 readMarketThreshold marketId)
+    (contract-call? 'SP15RGYVK9ACFQWMFFA2TVASDVZH38B4VATY8CJ01.stxpredict_v5 readMarketThreshold marketId)
   )
 )
 
@@ -34,12 +34,13 @@
 
 (define-private (resolveMarket (marketId int) (result bool))
   (begin
-    (contract-call? 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.stxpredict_v4 resolveMarket marketId result)
+    (contract-call? 'SP15RGYVK9ACFQWMFFA2TVASDVZH38B4VATY8CJ01.stxpredict_v5 resolveMarket marketId result)
   )
 )
 
 ;; psq signed oracle from exchanges
-;; STZ0RAC1EFTH949T4W2SYY6YBHJRMAF4ED5QB123.oracle-v1
+;; testnet STZ0RAC1EFTH949T4W2SYY6YBHJRMAF4ED5QB123.oracle-v1
+;; mainnet SPZ0RAC1EFTH949T4W2SYY6YBHJRMAF4ECT5A7DD.oracle-v1
 (define-private (getOraclePrice)
-  (contract-call? 'STZ0RAC1EFTH949T4W2SYY6YBHJRMAF4ED5QB123.oracle-v1 get-price openOracleSource openOracleSymbol)
+  (contract-call? 'SPZ0RAC1EFTH949T4W2SYY6YBHJRMAF4ECT5A7DD.oracle-v1 get-price openOracleSource openOracleSymbol)
 )

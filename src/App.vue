@@ -4,7 +4,7 @@
     <div>
       <img alt="logo" src="./assets/icon.png">
       <h1>stxpredict - Prediction Market on Stacks</h1>
-      <p>Create and Resolve any market, manually or via oracles. (Testnet only for now) <a href="https://github.com/pseudozach/stxpredict" target="_blank">source code</a></p>
+      <p>Create and Resolve any market, manually or via oracles. (Now on Mainnet) <a href="https://github.com/pseudozach/stxpredict" target="_blank">source code</a></p>
     </div>
     <!-- <HelloWorld msg="Welcome to Your Vue.js App"/> -->
     <!-- <Form /> -->

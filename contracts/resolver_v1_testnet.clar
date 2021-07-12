@@ -3,7 +3,7 @@
 
 (define-read-only (readMarketThreshold (marketId int))
   (begin
-    (contract-call? 'SP15RGYVK9ACFQWMFFA2TVASDVZH38B4VATY8CJ01.stxpredict_v5 readMarketThreshold marketId)
+    (contract-call? 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.stxpredict_v4 readMarketThreshold marketId)
   )
 )
 
@@ -34,7 +34,7 @@
 
 (define-private (resolveMarket (marketId int) (result bool))
   (begin
-    (contract-call? 'SP15RGYVK9ACFQWMFFA2TVASDVZH38B4VATY8CJ01.stxpredict_v5 resolveMarket marketId result)
+    (contract-call? 'ST15RGYVK9ACFQWMFFA2TVASDVZH38B4VAV4WF6BJ.stxpredict_v4 resolveMarket marketId result)
   )
 )
 
